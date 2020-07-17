@@ -47,8 +47,14 @@ func Merge(ipNets []*net.IPNet) []*net.IPNet {
 }
 
 func binprefix(ipNet *net.IPNet) string {
-	var s string
-	for _, b := range ipNet.IP {
+	var (
+		s  string
+		ip = ipNet.IP
+	)
+	if ip4 := ip.To4(); ip4 != nil {
+		ip = ip4
+	}
+	for _, b := range ip {
 		s += fmt.Sprintf("%08b", b)
 	}
 	ones, _ := ipNet.Mask.Size()
