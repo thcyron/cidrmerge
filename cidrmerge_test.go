@@ -1,9 +1,12 @@
-package cidrmerge
+package cidrmerge_test
 
 import (
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/thcyron/cidrmerge"
 )
 
 func mustParseIPNet(s string) *net.IPNet {
@@ -60,10 +63,18 @@ func TestMerge(t *testing.T) {
 	}
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			merged := Merge(testCase.Nets)
+			merged := cidrmerge.Merge(testCase.Nets)
 			if !reflect.DeepEqual(merged, testCase.Merged) {
 				t.Errorf("unexpected result: %v", merged)
 			}
 		})
 	}
+}
+
+func Example() {
+	_, ipNet1, _ := net.ParseCIDR("192.168.0.0/24")
+	_, ipNet2, _ := net.ParseCIDR("192.168.1.0/24")
+	merged := cidrmerge.Merge([]*net.IPNet{ipNet1, ipNet2})
+	fmt.Println(merged)
+	// Output: [192.168.0.0/23]
 }

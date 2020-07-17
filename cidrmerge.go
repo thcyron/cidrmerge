@@ -1,3 +1,4 @@
+// Package cidrmerge merges IPv4 and IPv6 networks.
 package cidrmerge
 
 import (
@@ -7,6 +8,8 @@ import (
 	"github.com/armon/go-radix"
 )
 
+// Merge finds adjacent networks in ipNets and merges them. It handles
+// both IPv4 and IPv6 networks, even in the same slice.
 func Merge(ipNets []*net.IPNet) []*net.IPNet {
 	if len(ipNets) <= 1 {
 		return ipNets
