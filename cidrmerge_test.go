@@ -4,72 +4,50 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/thcyron/cidrmerge"
 )
 
-func mustParseIPNet(s string) *net.IPNet {
-	_, ipnet, err := net.ParseCIDR(s)
-	if err != nil {
-		panic(err)
-	}
-	if ipnet == nil {
-		panic("no *net.IPNet")
-	}
-	return ipnet
-}
-
 func TestMerge(t *testing.T) {
-	testCases := map[string]struct {
-		Nets   []*net.IPNet
-		Merged []*net.IPNet
+	testCases := []struct {
+		In  []*net.IPNet
+		Out []*net.IPNet
 	}{
-		"ipv4": {
-			Nets: []*net.IPNet{
-				mustParseIPNet("192.168.0.0/24"),
-				mustParseIPNet("192.168.1.0/24"),
-				mustParseIPNet("192.168.2.0/23"),
-				mustParseIPNet("192.168.8.0/23"),
-				mustParseIPNet("192.168.10.1/32"),
-				mustParseIPNet("192.168.10.2/32"),
-				mustParseIPNet("192.168.10.3/32"),
-			},
-			Merged: []*net.IPNet{
-				mustParseIPNet("192.168.0.0/22"),
-				mustParseIPNet("192.168.8.0/23"),
-				mustParseIPNet("192.168.10.1/32"),
-				mustParseIPNet("192.168.10.2/31"),
-			},
+		{
+			[]*net.IPNet{},
+			[]*net.IPNet{},
 		},
-		"ipv6": {
-			Nets: []*net.IPNet{
-				mustParseIPNet("fe80:1234:5678:9abc::/64"),
-				mustParseIPNet("fe80:1234:5678:9abd::/64"),
-				mustParseIPNet("fe80:1234:5678:ffff::/64"),
-			},
-			Merged: []*net.IPNet{
-				mustParseIPNet("fe80:1234:5678:9abc::/63"),
-				mustParseIPNet("fe80:1234:5678:ffff::/64"),
-			},
+		{
+			ipnets("192.168.1.0/24"),
+			ipnets("192.168.1.0/24"),
 		},
-		"ipv4 and ipv6": {
-			Nets: []*net.IPNet{
-				mustParseIPNet("192.168.0.0/24"),
-				mustParseIPNet("192.168.1.0/24"),
-				mustParseIPNet("fe80:1234:5678:9abc::/64"),
-				mustParseIPNet("fe80:1234:5678:9abd::/64"),
-			},
-			Merged: []*net.IPNet{
-				mustParseIPNet("192.168.0.0/23"),
-				mustParseIPNet("fe80:1234:5678:9abc::/63"),
-			},
+		{
+			ipnets("192.168.0.0/24", "192.168.1.0/24"),
+			ipnets("192.168.1.0/23"),
+		},
+		{
+			ipnets("192.168.1.0/24", "192.168.2.0/24"),
+			ipnets("192.168.1.0/24", "192.168.2.0/24"),
+		},
+		{
+			ipnets("192.168.1.1/32", "192.168.1.2/32", "192.168.1.3/32"),
+			ipnets("192.168.1.1/32", "192.168.1.2/31"),
+		},
+		{
+			ipnets("fe80:1234:5678:9abc::/64", "fe80:1234:5678:9abd::/64", "fe80:1234:5678:ffff::/64"),
+			ipnets("fe80:1234:5678:9abc::/63", "fe80:1234:5678:ffff::/64"),
+		},
+		{
+			ipnets("192.168.0.0/24", "192.168.1.0/24", "fe80:1234:5678:9abc::/64", "fe80:1234:5678:9abd::/64"),
+			ipnets("192.168.0.0/23", "fe80:1234:5678:9abc::/63"),
 		},
 	}
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			merged := cidrmerge.Merge(testCase.Nets)
-			if !reflect.DeepEqual(merged, testCase.Merged) {
+	for i, testCase := range testCases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			merged := cidrmerge.Merge(testCase.In)
+			if !reflect.DeepEqual(merged, testCase.Out) {
 				t.Errorf("unexpected result: %v", merged)
 			}
 		})
@@ -82,4 +60,23 @@ func Example() {
 	merged := cidrmerge.Merge([]*net.IPNet{ipNet1, ipNet2})
 	fmt.Println(merged)
 	// Output: [192.168.0.0/23]
+}
+
+func ipnet(s string) *net.IPNet {
+	_, ipnet, err := net.ParseCIDR(s)
+	if err != nil {
+		panic(err)
+	}
+	if ipnet == nil {
+		panic("no *net.IPNet")
+	}
+	return ipnet
+}
+
+func ipnets(cidrs ...string) []*net.IPNet {
+	var ipnets []*net.IPNet
+	for _, cidr := range cidrs {
+		ipnets = append(ipnets, ipnet(cidr))
+	}
+	return ipnets
 }
