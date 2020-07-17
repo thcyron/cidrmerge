@@ -28,7 +28,9 @@ func Merge(ipNets []*net.IPNet) []*net.IPNet {
 			prefix := binprefix(superIPNet)
 			found := 0
 			t.WalkPrefix(prefix, func(s string, v interface{}) bool {
-				found++
+				if len(s) == len(prefix)+1 {
+					found++
+				}
 				return found == 2
 			})
 			if found == 2 {

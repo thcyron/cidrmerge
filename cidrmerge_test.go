@@ -31,10 +31,15 @@ func TestMerge(t *testing.T) {
 				mustParseIPNet("192.168.1.0/24"),
 				mustParseIPNet("192.168.2.0/23"),
 				mustParseIPNet("192.168.8.0/23"),
+				mustParseIPNet("192.168.10.1/32"),
+				mustParseIPNet("192.168.10.2/32"),
+				mustParseIPNet("192.168.10.3/32"),
 			},
 			Merged: []*net.IPNet{
 				mustParseIPNet("192.168.0.0/22"),
 				mustParseIPNet("192.168.8.0/23"),
+				mustParseIPNet("192.168.10.1/32"),
+				mustParseIPNet("192.168.10.2/31"),
 			},
 		},
 		"ipv6": {
