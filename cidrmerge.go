@@ -53,12 +53,15 @@ func binprefix(ipNet *net.IPNet) string {
 	)
 	if ip4 := ip.To4(); ip4 != nil {
 		ip = ip4
+		s += "4:"
+	} else {
+		s += "6:"
 	}
 	for _, b := range ip {
 		s += fmt.Sprintf("%08b", b)
 	}
 	ones, _ := ipNet.Mask.Size()
-	return s[0:ones]
+	return s[0 : 2+ones]
 }
 
 func supernet(ipNet *net.IPNet) *net.IPNet {
