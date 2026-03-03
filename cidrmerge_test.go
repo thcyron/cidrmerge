@@ -1,4 +1,4 @@
-package cidrmerge_test
+package cidrmerge
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
-
-	"github.com/thcyron/cidrmerge"
 )
 
 func TestMerge(t *testing.T) {
@@ -46,7 +44,7 @@ func TestMerge(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			merged := cidrmerge.Merge(testCase.In)
+			merged := Merge(testCase.In)
 			if !reflect.DeepEqual(merged, testCase.Out) {
 				t.Errorf("unexpected result: %v", merged)
 			}
@@ -57,7 +55,7 @@ func TestMerge(t *testing.T) {
 func Example() {
 	_, ipNet1, _ := net.ParseCIDR("192.168.0.0/24")
 	_, ipNet2, _ := net.ParseCIDR("192.168.1.0/24")
-	merged := cidrmerge.Merge([]*net.IPNet{ipNet1, ipNet2})
+	merged := Merge([]*net.IPNet{ipNet1, ipNet2})
 	fmt.Println(merged)
 	// Output: [192.168.0.0/23]
 }
@@ -79,4 +77,12 @@ func ipnets(cidrs ...string) []*net.IPNet {
 		ipnets = append(ipnets, ipnet(cidr))
 	}
 	return ipnets
+}
+
+func Benchmark_binprefix(b *testing.B) {
+	ipNet := ipnet("192.168.123.45/24")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		binprefix(ipNet)
+	}
 }
